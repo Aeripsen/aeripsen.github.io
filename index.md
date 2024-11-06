@@ -1,11 +1,12 @@
 # Welcome to My Page!
 
-**About Me:** I'm Sepehr Jafari, a CS minor and Math/Stat major at UTM.
+**About Me:**  
+I’m Sepehr Jafari, a Mathematics and Statistics major with a minor in Computer Science at the University of Toronto Mississauga.
 
-**Links:**
+**Connect with Me:**
 - [LinkedIn](https://www.linkedin.com/in/sepehr-jafari-fesharaki/)
 - [GitHub](https://github.com/Aeripsen)
-- [Medium Posts](https://medium.com/@aeripsen)
+- [Medium](https://medium.com/@aeripsen)
 
 **Contact:**  
-Email: [sepher.jafari@mail.utoronto.ca](mailto:sepher.jafari@mail.utoronto.ca)
+📧 Email: [sepehr.jafari@mail.utoronto.ca](mailto:sepehr.jafari@mail.utoronto.ca)
