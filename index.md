@@ -6,7 +6,6 @@ Hello! I'm Sepehr Jafari, a Math and Stats major with a minor in Computer Scienc
 **Connect with Me:**
 - [LinkedIn](https://www.linkedin.com/in/sepehr-jafari-fesharaki/)
 - [GitHub](https://github.com/Aeripsen)
-- [Medium](https://medium.com/@aeripsen)
 
 **Contact Information:**  
 📧 Email: [sepher.jafari@mail.utoronto.ca](mailto:sepher.jafari@mail.utoronto.ca)
