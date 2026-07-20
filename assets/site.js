@@ -51,6 +51,7 @@
 
   function buildFooter() {
     var links = el("div", { "class": "foot-links" }, [
+      el("a", { href: "mailto:sepehr1381ja@gmail.com" }, ["Email"]),
       el("a", { href: "https://github.com/Aeripsen", rel: "me noopener" }, ["GitHub"]),
       el("a", { href: "https://orcid.org/0009-0002-8610-112X", rel: "me noopener" }, ["ORCID"]),
       el("a", { href: "https://www.linkedin.com/in/sepehr-jafari-fesharaki", rel: "me noopener" }, ["LinkedIn"]),

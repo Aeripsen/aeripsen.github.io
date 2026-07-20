@@ -81,7 +81,10 @@
           <p>devicePixelRatio capped at 2. Static layers pre rendered once per resize into offscreen
           canvases, so a frame is three <code>drawImage</code> calls. IntersectionObserver plus the
           Page Visibility API to stop work nobody can see. An FPS watchdog that sheds the Milky Way
-          and freezes the constellation rotation when the frame rate drops.</p>
+          and freezes the constellation rotation when the frame rate drops. The reject knob on
+          <a href="index.html">this site's front page</a> runs on the same discipline: a pre rendered
+          base, one <code>drawImage</code> per animated frame, and no loop at all while nothing
+          moves.</p>
         </li>
         <li>
           <h3>Reduced motion is honoured properly</h3>

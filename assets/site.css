@@ -182,7 +182,10 @@ section + section { border-top: var(--rule); }
   grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
   align-items: start;
 }
-@media (max-width: 52rem) { .cols { grid-template-columns: 1fr; } }
+/* minmax(0, 1fr), not 1fr: a bare 1fr means minmax(auto, 1fr), and the
+   automatic minimum lets a wide table inside .table-scroll push the whole
+   column past the viewport on a phone. */
+@media (max-width: 52rem) { .cols { grid-template-columns: minmax(0, 1fr); } }
 .cols > .col-head { position: sticky; top: 5rem; }
 @media (max-width: 52rem) { .cols > .col-head { position: static; } }
 
@@ -194,7 +197,7 @@ section + section { border-top: var(--rule); }
   grid-template-columns: minmax(0, 1fr) minmax(0, 34rem);
   align-items: center;
 }
-@media (max-width: 62rem) { .hero-grid { grid-template-columns: 1fr; } }
+@media (max-width: 62rem) { .hero-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .hero h1 { margin-bottom: 1.25rem; }
 .hero h1 em {
@@ -389,3 +392,34 @@ table caption { caption-side: bottom; text-align: left; }
 .backlink:hover { color: var(--accent); }
 
 hr.rule { border: none; border-top: var(--rule); margin-block: 2.5rem; }
+
+/* ---------- motion ----------
+   Every animation on the site lives inside this one block, so honouring
+   prefers-reduced-motion is a property of the stylesheet's structure, not a
+   promise. The canvas instrument checks the same media query in JS and runs
+   no animation loop at all when it matches. */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* the caret in the wordmark: the site is a running instrument, not a brochure */
+  .brand span { animation: caret 1.2s step-end infinite; }
+  @keyframes caret {
+    0%, 55% { opacity: 1; }
+    56%, 100% { opacity: 0; }
+  }
+
+  /* one orchestrated entrance on the index hero, under a second in total */
+  .hero [data-reveal] { animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+  .hero [data-reveal="2"] { animation-delay: 0.07s; }
+  .hero [data-reveal="3"] { animation-delay: 0.14s; }
+  .hero [data-reveal="4"] { animation-delay: 0.21s; }
+  .hero [data-reveal="5"] { animation-delay: 0.3s; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(0.6rem); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* work rows point where they go */
+  .work-go { transition: transform 0.18s ease, color 0.18s ease; }
+  .work-item:hover .work-go { transform: translateX(0.3rem); }
+}

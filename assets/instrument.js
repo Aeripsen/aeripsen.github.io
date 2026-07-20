@@ -14,6 +14,20 @@
  * measured coverage and reliability to within one tile. That is stated on the
  * page too, because a picture that implies more resolution than the data has
  * is the same sin as rounding a number up.
+ *
+ * Motion, one primitive only: a wavefront that walks the confidence ranking
+ * (rank 1 = the flow the model is most sure about) and can never travel past
+ * the covered count of the current threshold. Page load resolves the grid in
+ * that order, moving the knob sweeps the boundary between two measured stops,
+ * and the ambient pulse retraces the ranking and dies where the answers stop.
+ * So the animation is the thesis, not decoration on it.
+ *
+ * Performance is the same discipline as the imammahdi.ca sky engine: the grid
+ * is pre-rendered once per state into an offscreen canvas, an animated frame
+ * is one drawImage plus a small overlay window, the loop only runs while
+ * something is actually moving, and it pauses when the tab is hidden or the
+ * canvas is scrolled away. Under prefers-reduced-motion there is no loop at
+ * all: the grid renders once per state as a static composition.
  */
 
 (function () {
@@ -83,19 +97,31 @@
     var m = Math.floor(rand() * (j + 1));
     var tmp = rankOfCell[j]; rankOfCell[j] = rankOfCell[m]; rankOfCell[m] = tmp;
   }
+  var cellOfRank = new Int32Array(N + 1);      // inverse map, for the wavefront
+  for (var q = 0; q < N; q++) cellOfRank[rankOfCell[q]] = q;
 
-  /* ---- draw ---------------------------------------------------------- */
+  /* ---- theme and geometry -------------------------------------------- */
 
-  function css(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  var col = {};
+  function readTheme() {
+    var cs = getComputedStyle(document.documentElement);
+    col.bg = cs.getPropertyValue("--surface").trim();
+    col.sig = cs.getPropertyValue("--signal").trim();
+    col.bad = cs.getPropertyValue("--warn").trim();
+    col.off = cs.getPropertyValue("--abstain").trim();
+    col.pulse = cs.getPropertyValue("--text").trim();
   }
 
   /* Render at the box's real size so the grid is never downscaled. A
      downscaled tile grid moires badly, which reads as a rendering bug rather
      than as data. */
-  var cell = 10, gap = 1, w = COLS * cell, h = ROWS * cell;
+  var cell = 10, gap = 1, w = COLS * cell, h = ROWS * cell, dpr = 1;
+
+  var base = document.createElement("canvas");   // pre-rendered current state
+  var bctx = base.getContext("2d", { alpha: false });
+
   function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
     var boxW = canvas.clientWidth || canvas.parentNode.clientWidth || 640;
     cell = boxW / COLS;
     gap = cell > 7 ? 1 : 0.6;
@@ -104,65 +130,253 @@
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     canvas.style.height = h + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    base.width = canvas.width;
+    base.height = canvas.height;
+    readTheme();
   }
 
-  function draw(stop) {
-    var covered = coveredAt[stop];
-    var bg = css("--surface"), sig = css("--signal"),
-        bad = css("--warn"), off = css("--abstain");
+  /* ---- drawing -------------------------------------------------------- */
 
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-
+  function tilesInto(c2d, covered) {
+    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c2d.fillStyle = col.bg;
+    c2d.fillRect(0, 0, w, h);
     for (var idx = 0; idx < N; idx++) {
       var rank = rankOfCell[idx];
       var x = (idx % COLS) * cell, y = Math.floor(idx / COLS) * cell;
       if (rank > covered) {
-        ctx.fillStyle = off;
-        ctx.globalAlpha = 0.85;
+        c2d.fillStyle = col.off;
+        c2d.globalAlpha = 0.85;
       } else {
-        ctx.fillStyle = isWrong[rank] ? bad : sig;
-        ctx.globalAlpha = 1;
+        c2d.fillStyle = isWrong[rank] ? col.bad : col.sig;
+        c2d.globalAlpha = 1;
       }
+      c2d.fillRect(x, y, cell - gap, cell - gap);
+    }
+    c2d.globalAlpha = 1;
+  }
+
+  function renderBase(covered) { tilesInto(bctx, covered); }
+
+  function blit() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(base, 0, 0);
+  }
+
+  /* the wavefront: brighten tiles whose rank trails just behind `front` */
+  function pulseAt(front, limit, width, amp) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = col.pulse;
+    var lo = Math.max(1, Math.ceil(front - width));
+    var hi = Math.min(limit, Math.floor(front));
+    for (var r = lo; r <= hi; r++) {
+      var d = (front - r) / width;          // 0 at the front, 1 at the tail
+      var a = amp * (1 - d) * (1 - d);
+      if (a < 0.01) continue;
+      var idx = cellOfRank[r];
+      var x = (idx % COLS) * cell, y = Math.floor(idx / COLS) * cell;
+      ctx.globalAlpha = a;
       ctx.fillRect(x, y, cell - gap, cell - gap);
     }
     ctx.globalAlpha = 1;
   }
 
-  /* ---- readout ------------------------------------------------------- */
+  /* intro frame: tiles behind the front are resolved, tiles ahead are unresolved */
+  function drawIntro(front) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = col.bg;
+    ctx.fillRect(0, 0, w, h);
+    for (var idx = 0; idx < N; idx++) {
+      var rank = rankOfCell[idx];
+      var x = (idx % COLS) * cell, y = Math.floor(idx / COLS) * cell;
+      if (rank <= front) {
+        if (rank > stateCovered) { ctx.fillStyle = col.off; ctx.globalAlpha = 0.85; }
+        else { ctx.fillStyle = isWrong[rank] ? col.bad : col.sig; ctx.globalAlpha = 1; }
+      } else {
+        ctx.fillStyle = col.off;
+        ctx.globalAlpha = 0.16;
+      }
+      ctx.fillRect(x, y, cell - gap, cell - gap);
+    }
+    ctx.globalAlpha = 1;
+    pulseAt(front, N, 200, 0.32);
+  }
+
+  /* ---- readout -------------------------------------------------------- */
 
   function pct(x) { return (x * 100).toFixed(1) + "%"; }
 
   var outThr = document.getElementById("out-threshold");
   var outCov = document.getElementById("out-coverage");
   var outRel = document.getElementById("out-reliability");
-  var outN = document.getElementById("out-n");
   var outAbs = document.getElementById("out-abstained");
 
-  function update() {
-    var stop = parseInt(slider.value, 10);
+  function setReadout(stop) {
     var p = CURVE[stop];
     if (outThr) outThr.textContent = p.t.toFixed(2);
     if (outCov) outCov.textContent = pct(p.coverage);
     if (outRel) outRel.textContent = pct(p.reliability);
-    if (outN) outN.textContent = p.n_covered.toLocaleString("en-CA");
     if (outAbs) outAbs.textContent = (N_TEST - p.n_covered).toLocaleString("en-CA");
     slider.setAttribute("aria-valuetext",
       "Reject threshold " + p.t.toFixed(2) + ". Answers " + pct(p.coverage) +
       " of flows at " + pct(p.reliability) + " reliability.");
-    draw(stop);
   }
 
-  slider.addEventListener("input", update);
-  window.addEventListener("resize", function () { resize(); update(); });
-  if (window.matchMedia) {
-    var mq = window.matchMedia("(prefers-color-scheme: dark)");
-    var onScheme = function () { update(); };
-    if (mq.addEventListener) mq.addEventListener("change", onScheme);
-    else if (mq.addListener) mq.addListener(onScheme);
+  /* ---- animation state machine ---------------------------------------- */
+
+  var reducedMq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+  function reduced() { return !!(reducedMq && reducedMq.matches); }
+
+  var stateCovered = 0;        // the committed covered count (current stop)
+  var displayCovered = 0;      // what is on screen right now (float during shifts)
+  var mode = "idle";           // idle | intro | shift | sweep
+  var t0 = 0;                  // start timestamp of the running phase
+  var shiftFrom = 0, shiftTo = 0;
+  var raf = null, ambTimer = null;
+  var inView = true, pageVisible = !document.hidden;
+
+  var INTRO_MS = 1500, SHIFT_MS = 420, SWEEP_MS = 2600, REST_MS = 4600;
+
+  function easeInOut(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
+
+  function canAnimate() { return !reduced() && inView && pageVisible; }
+
+  function stopLoop() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
   }
+
+  function settle() {
+    mode = "idle";
+    displayCovered = stateCovered;
+    renderBase(stateCovered);
+    blit();
+    stopLoop();
+    scheduleSweep(REST_MS);
+  }
+
+  function frame(now) {
+    raf = null;
+    if (!canAnimate()) { settle(); return; }
+    var t = now - t0;
+
+    if (mode === "intro") {
+      var p = Math.min(1, t / INTRO_MS);
+      drawIntro(easeInOut(p) * N);
+      if (p >= 1) { settle(); return; }
+
+    } else if (mode === "shift") {
+      var ps = Math.min(1, t / SHIFT_MS);
+      displayCovered = shiftFrom + (shiftTo - shiftFrom) * easeInOut(ps);
+      tilesInto(ctx, Math.round(displayCovered));
+      pulseAt(displayCovered, N, 70, 0.3);
+      if (ps >= 1) { settle(); return; }
+
+    } else if (mode === "sweep") {
+      var pw = Math.min(1, t / SWEEP_MS);
+      blit();
+      pulseAt(easeInOut(pw) * stateCovered, stateCovered, 150, 0.2);
+      if (pw >= 1) { settle(); return; }
+    } else {
+      return;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function begin(newMode) {
+    mode = newMode;
+    clearTimeout(ambTimer);
+    stopLoop();
+    raf = requestAnimationFrame(function (now) { t0 = now; frame(now); });
+  }
+
+  function scheduleSweep(delay) {
+    clearTimeout(ambTimer);
+    ambTimer = setTimeout(function () {
+      if (mode === "idle" && canAnimate()) begin("sweep");
+    }, delay);
+  }
+
+  /* ---- wiring ---------------------------------------------------------- */
+
+  function onKnob() {
+    var stop = parseInt(slider.value, 10);
+    setReadout(stop);
+    var target = coveredAt[stop];
+    if (target === stateCovered && mode !== "intro") return;
+    stateCovered = target;
+    if (!canAnimate()) {
+      displayCovered = target;
+      renderBase(target);
+      blit();
+      return;
+    }
+    shiftFrom = displayCovered;
+    shiftTo = target;
+    begin("shift");
+  }
+
+  slider.addEventListener("input", onKnob);
+
+  /* Mobile browsers fire resize on scroll when the URL bar collapses, and
+     that must not cancel a running animation. Only a real width change
+     re-lays the grid. */
+  var lastBoxW = 0;
+  window.addEventListener("resize", function () {
+    var boxW = canvas.clientWidth || 0;
+    if (boxW === lastBoxW) return;
+    lastBoxW = boxW;
+    resize();
+    renderBase(stateCovered);
+    displayCovered = stateCovered;
+    if (mode !== "idle") { mode = "idle"; stopLoop(); }
+    blit();
+    scheduleSweep(REST_MS);
+  });
+
+  function onSchemeOrMotion() {
+    readTheme();
+    renderBase(stateCovered);
+    if (reduced()) { mode = "idle"; stopLoop(); clearTimeout(ambTimer); displayCovered = stateCovered; }
+    blit();
+    if (!reduced()) scheduleSweep(REST_MS);
+  }
+  function listenMq(mq) {
+    if (!mq) return;
+    if (mq.addEventListener) mq.addEventListener("change", onSchemeOrMotion);
+    else if (mq.addListener) mq.addListener(onSchemeOrMotion);
+  }
+  if (window.matchMedia) listenMq(window.matchMedia("(prefers-color-scheme: dark)"));
+  listenMq(reducedMq);
+
+  document.addEventListener("visibilitychange", function () {
+    pageVisible = !document.hidden;
+    if (!pageVisible) { clearTimeout(ambTimer); }
+    else if (mode === "idle" && canAnimate()) scheduleSweep(REST_MS);
+  });
+
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      inView = entries[0].isIntersecting;
+      if (!inView) { clearTimeout(ambTimer); }
+      else if (mode === "idle" && canAnimate()) scheduleSweep(REST_MS);
+    }).observe(canvas);
+  }
+
+  /* ---- boot ------------------------------------------------------------ */
+
+  var stop0 = parseInt(slider.value, 10);
+  if (isNaN(stop0) || stop0 < 0 || stop0 >= CURVE.length) stop0 = 0;
+  stateCovered = coveredAt[stop0];
+  displayCovered = stateCovered;
 
   resize();
-  update();
+  lastBoxW = canvas.clientWidth || 0;
+  setReadout(stop0);
+  renderBase(stateCovered);
+
+  if (canAnimate()) {
+    begin("intro");
+  } else {
+    blit();
+  }
 })();

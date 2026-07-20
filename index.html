@@ -20,22 +20,22 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">Toronto</span>
-      <h1>I build detectors that know when to <em>abstain</em>.</h1>
-      <p class="hero-sub">
+      <span class="eyebrow" data-reveal="1">Toronto</span>
+      <h1 data-reveal="2">I build detectors that know when to <em>abstain</em>.</h1>
+      <p class="hero-sub" data-reveal="3">
         Math and statistics at the University of Toronto, and a research assistant in network
         security. First author on an accepted SECRYPT 2026 paper on UDP and QUIC intrusion
         detection, with the 1.22 million flow dataset published behind it. Right now I am
         architecting a detector that spans four wireless protocols at once.
       </p>
-      <div class="hero-meta">
+      <div class="hero-meta" data-reveal="4">
         <span class="tag tag-paper">SECRYPT 2026, first author</span>
         <span class="tag tag-live">2 public detectors shipped</span>
         <span class="tag tag-build">4 protocol IoT IDS in progress</span>
       </div>
     </div>
 
-    <div class="instrument">
+    <div class="instrument" data-reveal="5">
       <div class="instrument-head">
         <h2>Reject knob, FlowSentry</h2>
         <span class="tag">held-out test split</span>
@@ -54,32 +54,34 @@
       <div class="knob">
         <label for="knob">
           <span>reject threshold</span>
-          <b id="out-threshold">0.00</b>
+          <b id="out-threshold">0.70</b>
         </label>
-        <input type="range" id="knob" min="0" max="6" step="1" value="0"
+        <input type="range" id="knob" min="0" max="6" step="1" value="2"
                aria-label="Reject threshold, stepping through the seven measured values">
       </div>
 
       <div class="readout">
         <div>
           <span class="k">answers</span>
-          <span class="v v-accent" id="out-coverage">100.0%</span>
+          <span class="v v-accent" id="out-coverage">81.9%</span>
         </div>
         <div>
           <span class="k">and is right</span>
-          <span class="v v-signal" id="out-reliability">83.2%</span>
+          <span class="v v-signal" id="out-reliability">97.5%</span>
         </div>
         <div>
           <span class="k">flows abstained</span>
-          <span class="v" id="out-abstained">0</span>
+          <span class="v" id="out-abstained">1,191</span>
         </div>
       </div>
 
       <p class="cite" style="margin-top:0.9rem">
         Drag it. The seven stops are the seven thresholds actually measured in
         <code>flowsentry/artifacts/metrics.json : coverage_reliability_curve</code>, on
-        <span id="out-n">6,570</span> held-out flows. Each tile stands for 3 flows, so the
-        picture reproduces the measured coverage and reliability, not per flow scores.
+        6,570 held-out flows. Each tile stands for 3 flows, so the
+        picture reproduces the measured coverage and reliability, not per flow scores. The
+        pulse that moves through the grid walks the model's confidence ranking, surest flow
+        first, and stops exactly where the answers stop.
       </p>
     </div>
   </div>
@@ -104,6 +106,12 @@
         I am building now all expose the same control. The interesting engineering is not the model.
         It is knowing which flows you are allowed to be confident about, and proving it on a split
         that cannot leak.
+      </p>
+      <p>
+        If your team runs a fraud queue, a SOC, or a risk model that pages someone at 3am, this
+        tradeoff is already your job: every alert spends analyst time, every miss costs more, and
+        the worst failures are the confident wrong answers. I would rather hand you the whole
+        measured curve than quote you its best point.
       </p>
     </div>
   </div>
@@ -138,6 +146,32 @@
         architecture. I measured it, published it, and withdrew the claim.</span>
         <span class="cite">flowsentry/artifacts/hierarchy_benchmark.json, ADR 001</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ the person ============ -->
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head">
+      <span class="eyebrow">The person</span>
+    </div>
+    <div>
+      <p class="lede">
+        I am a math and statistics student who came to security through a CTF scoreboard and
+        stayed for the research. The habit underneath everything I make is the same one:
+        <strong>check it against something outside yourself.</strong>
+      </p>
+      <p>
+        So my team's results sit on a public scoreboard. The dataset behind my paper is public,
+        so a stranger can rerun the numbers without trusting me. Even the volunteer work has it:
+        the mosque site I maintain draws its night sky from the real position of the sun and the
+        true phase of the moon, so you can step outside and verify the homepage.
+      </p>
+      <p>
+        That is also the kind of problem I want handed to me: the kind where "not sure yet" is
+        sometimes the right answer, and where saying it early is worth money.
+      </p>
     </div>
   </div>
 </section>
@@ -247,7 +281,8 @@
     <div class="col-head"><span class="eyebrow">Elsewhere</span></div>
     <div>
       <p class="lede" style="margin-bottom:1.25rem">
-        Open to research and to security or machine learning internships. Toronto, or remote in Canada.
+        Open to internships and research roles in security, fraud and risk, and machine learning.
+        Toronto, or remote in Canada. Email is the fastest way to reach me.
       </p>
       <p class="mono" style="font-size:0.85rem;line-height:2">
         <a href="mailto:sepehr1381ja@gmail.com">sepehr1381ja@gmail.com</a><br>
