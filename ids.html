@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Four protocol IoT intrusion detection, in progress</title>
-<meta name="description" content="An intrusion detection system spanning BLE, Zigbee, Z-Wave and Wi-Fi on a live testbed of real devices, labelled at the decoded application layer. Currently being architected.">
+<meta name="description" content="An intrusion detection system being architected across BLE, Zigbee, Z-Wave and Wi-Fi on a live testbed of real devices, labelled at the decoded application layer to catch well formed commands with no legitimate trigger behind them.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -15,13 +15,14 @@
   <div class="wrap">
     <a class="backlink" href="index.html">&#8592; index</a>
     <span class="eyebrow">In progress, 2026</span>
-    <h1>One detector, four wireless protocols, labelled at the layer that means something</h1>
+    <h1>Four protocols, one detector, and the command no one asked for</h1>
     <p class="lede">
-      Healthcare and consumer IoT does not speak one protocol. A single room runs
-      <strong>BLE, Zigbee, Z-Wave and Wi-Fi</strong> at the same time, and an intruder only has to
-      be fluent in one of them. I am building an intrusion detection system that watches all four
-      on a live testbed of real devices, and labels what it sees using the decoded application
-      command rather than the shape of the packet.
+      The attack worth catching on a smart lock or an infusion pump is not malformed traffic. It is
+      a <strong>perfectly well formed command that no human asked for</strong>: valid bytes, valid
+      protocol, no legitimate trigger anywhere behind it. I am building an intrusion detection
+      system that hunts that absence across BLE, Zigbee, Z-Wave and Wi-Fi at once, on a live
+      testbed of real devices, because a single room runs all four and an intruder only has to be
+      fluent in one.
     </p>
     <div class="tags">
       <span class="tag tag-build">architecting, not shipped</span>
@@ -57,10 +58,10 @@
         do</em>.
       </p>
       <p>
-        That matters, because the interesting attack on a smart lock or an infusion pump is not
-        malformed traffic. It is a perfectly well formed command that no human ever asked for. You
-        cannot detect that from packet shape alone, and you cannot even <em>label</em> it correctly
-        without decoding the protocol's application layer.
+        A detector trained on those labels learns the noise attacks make, not the act. It can flag
+        a flood and stay blind while a lock receives a clean, well formed unlock. You cannot see
+        the difference from packet shape alone, and you cannot even <em>label</em> it correctly
+        without decoding what the command said. Fixing the label is where this project starts.
       </p>
     </div>
   </div>

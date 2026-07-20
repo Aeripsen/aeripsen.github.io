@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LedgerSentry, card fraud detection with the interval printed</title>
-<meta name="description" content="Real time card fraud detection on the ULB dataset. The differentiator is not the model, it is the temporal split, the published confidence interval, and a calibrator chosen on a rule fixed before fitting.">
+<meta name="description" content="Card fraud on the ULB dataset with the review queue priced in: 84% of fraud caught fully automated, 89.8% precision once 7.1% goes to human review, a printed confidence interval, and a temporal split.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -17,11 +17,13 @@
     <span class="eyebrow">Public repo, 2026</span>
     <h1>LedgerSentry</h1>
     <p class="lede">
-      The same engine as <a href="flowsentry.html">FlowSentry</a>, pointed at card fraud. It runs on
-      the most used fraud dataset on earth, which means the model cannot be the differentiator.
-      <strong>The rigor is.</strong> A split ordered by time instead of shuffled, a confidence
-      interval printed next to the headline, and a calibrator picked by a rule I fixed before I
-      fitted anything.
+      Fraud review is a budget before it is a model. Run fully automated, this catches 63 of the
+      test fold's 75 frauds, 84%, at 29% precision on what it flags. Turn the review dial until
+      7.1% of transactions go to a human queue and <strong>precision on the flags reaches 89.8%,
+      with misses cut from 12 to 6.</strong> The scores are calibrated, so a desk sets that dial
+      from its own cost of a review against its cost of a miss, not from my defaults. The engine is
+      <a href="flowsentry.html">FlowSentry</a>'s, pointed at the most used fraud dataset on earth,
+      where the model cannot be the differentiator. The rigor is.
     </p>
     <div class="proj-links">
       <a href="https://github.com/Aeripsen/ledgersentry" rel="noopener">github.com/Aeripsen/ledgersentry &#8599;</a>
@@ -62,6 +64,52 @@
         the verdict as MEETS.</span>
         <span class="cite">artifacts/benchmark_ulb_creditcard.json : single_row.compiled.p99_ms</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The review dial</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">Precision is bought with analyst minutes, and the price list
+      ships in the artifact.</h2>
+      <p>
+        One model, one temporal test fold of 56,961 transactions, 75 of them fraud. The only thing
+        that moves between rows is the threshold above which a transaction is routed to a human
+        instead of answered automatically.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Review threshold</th><th scope="col">Sent to review</th>
+              <th scope="col">Precision on flags</th><th scope="col">Fraud caught auto</th>
+              <th scope="col">Missed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>0.50</td><td>0</td><td>0.2917</td><td>63 of 75</td><td>12</td></tr>
+            <tr><td>0.90</td><td>1,582 (2.8%)</td><td>0.7397</td><td>54</td><td>8</td></tr>
+            <tr><td>0.95</td><td>4,039 (7.1%)</td><td>0.8983</td><td>53</td><td>6</td></tr>
+            <tr><td>0.99</td><td>56,943 (all but 18)</td><td>no flags left</td><td>0</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cite table-note">
+        artifacts/metrics_ulb_creditcard.json : coverage_precision_curve. Review share is
+        n_sent_to_review over the 56,961 row fold. Precision values verbatim from the artifact.
+      </p>
+      <p>
+        This is the table I would want handed to me if I ran the desk. Each step down in workload
+        has its price in misses, each step up in precision has its price in queue depth, and none
+        of it is extrapolated. Pick the row your team can staff.
+      </p>
+      <p>
+        The 0.99 row is the failure mode, printed rather than cropped: nearly the whole fold lands
+        in the review queue, which is not a detector, it is a backlog. The weak spots section below
+        names it.
+      </p>
     </div>
   </div>
 </section>
@@ -151,8 +199,9 @@
         </li>
         <li>
           <h3>The reject knob degenerates at the high end</h3>
-          <p>Real, explainable, and written down in the repo rather than hidden behind a screenshot
-          of the good part of the curve.</p>
+          <p>Past threshold 0.95 the queue explodes: the 0.99 row in the table above sends all but
+          18 transactions to a human. Real, explainable, and printed in the table rather than
+          cropped out of the curve.</p>
         </li>
         <li>
           <h3>The Docker image was never build tested</h3>
