@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlowSentry, and the benchmark where my own architecture lost</title>
+<meta name="description" content="A two stage UDP and QUIC intrusion detector built on my SECRYPT 2026 dataset, then benchmarked against simpler baselines until it lost, with the losing result published.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main id="main">
+
+<section class="proj-head">
+  <div class="wrap">
+    <a class="backlink" href="index.html">&#8592; index</a>
+    <span class="eyebrow">Public repo, 2026</span>
+    <h1>FlowSentry</h1>
+    <p class="lede">
+      My paper's architecture, taken out of the paper and made to serve requests: a two stage
+      UDP and QUIC attack detector with a request time reject knob, on a connection grouped split
+      that cannot leak. Then I benchmarked it against the simplest baseline I could think of, and
+      <strong>it lost</strong>, so I published that too.
+    </p>
+    <div class="proj-links">
+      <a href="https://github.com/Aeripsen/flowsentry" rel="noopener">github.com/Aeripsen/flowsentry &#8599;</a>
+      <a href="research.html">the paper behind it</a>
+    </div>
+    <div class="tags">
+      <span class="tag tag-live">public and reproducible</span>
+      <span class="tag">46 tests green</span>
+      <span class="tag">8 ADRs, model card, threat model</span>
+      <span class="tag">no public deploy yet</span>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap">
+    <div class="ledger">
+      <div>
+        <span class="num v-signal">0.977</span>
+        <span class="lbl">Binary attack detection PR-AUC on the held out split.</span>
+        <span class="cite">artifacts/metrics.json : binary_attack_detection_pr_auc = 0.9767</span>
+      </div>
+      <div>
+        <span class="num">83.2 &rarr; 99.3%</span>
+        <span class="lbl">Reliability as the reject knob turns, from answering every flow to
+        answering the 64.8% it is sure about.</span>
+        <span class="cite">artifacts/metrics.json : coverage_reliability_curve</span>
+      </div>
+      <div>
+        <span class="num v-accent">44.7 &rarr; 2.4 ms</span>
+        <span class="lbl">Single flow scoring, after profiling out a thread pool that was being
+        spun up on every call. p95 5.6 ms.</span>
+        <span class="cite">artifacts/benchmark.json : single_row_native_pool.mean_ms, single_row.mean_ms</span>
+      </div>
+      <div>
+        <span class="num">125,000/s</span>
+        <span class="lbl">Batched throughput on the same machine, same model.</span>
+        <span class="cite">artifacts/benchmark.json : batch[25615].flows_per_s = 125027.4</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The result I did not want</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">A 60 tree forest beats my hierarchy on every axis I care about.</h2>
+      <p>
+        The two stage design exists because a cheap first stage should let you skip expensive QUIC
+        feature extraction on most flows. That is a compute argument, and I had never actually
+        measured it. So I built the benchmark, put four arms in it including the most boring one, and
+        ran it.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Arm</th><th scope="col">Accuracy</th><th scope="col">Macro F1</th>
+              <th scope="col">Binary PR-AUC</th><th scope="col">Serve ms</th><th scope="col">Batch ms</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>stage 1 only</td><td>0.8306</td><td>0.3794</td><td>0.9764</td><td>1.595</td><td>0.00769</td></tr>
+            <tr><td>joint forest, 200 trees</td><td>0.8317</td><td>0.3911</td><td class="best">0.9774</td><td>5.010</td><td>0.01796</td></tr>
+            <tr class="win"><td>joint forest, 60 trees</td><td>0.8311</td><td class="best">0.3946</td><td>0.9771</td><td class="best">1.388</td><td class="best">0.00704</td></tr>
+            <tr class="mine"><td>two stage hierarchy</td><td>0.8317</td><td>0.3911</td><td>0.9767</td><td>2.597</td><td>0.02453</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cite table-note">
+        artifacts/hierarchy_benchmark.json. Cyan marks the best value in each column, so the cyan row
+        is the winner and the amber row is mine. The quality columns are seeded and reproduce
+        exactly. The two timing columns are one run's snapshot: the artifact's own note says the
+        absolute figures move by tens of percent on a loaded machine and must not be quoted without
+        re-running, while the ratios between arms held across repeats. So the verdict below is stated
+        as a ratio, which is the part that is stable.
+      </p>
+      <p>
+        One plain forest with 60 trees serves <strong>1.9 times faster</strong>, batches 3.5 times
+        faster, has the highest macro F1 of any arm, and beats the hierarchy on binary PR-AUC. No
+        escalation threshold, one model.
+      </p>
+      <p>
+        The reject knob does not rescue it either, which was my next hope. Any model that emits a
+        probability has a reject knob, and at threshold 0.99 the joint model dominates: it answers
+        <strong>66.6% at 99.41% reliability</strong> against the hierarchy's 64.8% at 99.32%. More
+        coverage <em>and</em> more reliability.
+      </p>
+      <div class="note note-warn">
+        <span class="eyebrow">What I did about it</span>
+        <p>
+          ADR 001 now withdraws the compute justification instead of keeping an unmeasured claim, and
+          states what the hierarchy is actually for: it is the paper's architecture, and the
+          escalation rate turns out to be a useful monitoring signal in its own right. QUIC
+          extraction would have to cost more than about 1.9 ms per flow before the design pays for
+          itself, and this implementation does not even defer extraction, so it never could.
+        </p>
+        <p>
+          <strong>Scope it honestly:</strong> this is a result about the shipped 25,615 flow sample
+          under one split. It is not a refutation of the paper, which used a different sample,
+          different preprocessing, and a different protocol.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Build</span></div>
+    <div>
+      <ul class="speclist">
+        <li>
+          <h3>A split that cannot leak</h3>
+          <p>Grouped by the UDP 5-tuple connection, so no connection has flows in both training and
+          test. A random split would score higher and mean less.</p>
+          <span class="cite">metrics.json : split, n_train 19045, n_test 6570</span>
+        </li>
+        <li>
+          <h3>The reject knob as a request parameter</h3>
+          <p>The threshold is set per request, not baked into the model, so an operator can move
+          their operating point without a redeploy. <a href="index.html">Interactive version on the
+          front page.</a></p>
+        </li>
+        <li>
+          <h3>A service, containerised, with CI</h3>
+          <p>FastAPI for prediction and for the curve, a Streamlit dashboard with the live knob,
+          a Dockerfile, and GitHub Actions running ruff and pytest. <strong>There is no public
+          deploy with a URL yet</strong>, and the repo's roadmap says so rather than implying
+          otherwise.</p>
+        </li>
+        <li>
+          <h3>Reproduces byte for byte from a cold clone</h3>
+          <p><code>python scripts/reproduce.py</code> retrains from the committed sample and fails
+          loudly if <code>metrics.json</code> changes by a single byte. Verified from a fresh clone
+          and a fresh virtual environment.</p>
+        </li>
+        <li>
+          <h3>Eight ADRs that name what was rejected</h3>
+          <p>Including the one that withdrew its own claim. Plus a model card and a threat model,
+          because a detector without a stated adversary is a classifier with a security word in
+          front of it.</p>
+        </li>
+      </ul>
+      <div class="stack">
+        <span class="tag">Python</span><span class="tag">scikit-learn</span>
+        <span class="tag">FastAPI</span><span class="tag">Streamlit</span>
+        <span class="tag">Docker</span><span class="tag">GitHub Actions</span>
+        <span class="tag">pytest</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Weak spots</span></div>
+    <div>
+      <p class="lede" style="margin-bottom:1.25rem">
+        Stated here rather than waiting to be found.
+      </p>
+      <ul class="speclist">
+        <li>
+          <h3>The numbers are on a 25,615 flow sample, not the full dataset</h3>
+          <p>A deliberate choice so a cold clone reproduces without a multi gigabyte download. The
+          README says so on the first screen.</p>
+        </li>
+        <li>
+          <h3>0.977 is attack detection, not family attribution</h3>
+          <p>Per class PR-AUC runs from <strong>0.9986</strong> on the dominant class down to
+          <strong>0.0424</strong> on the rarest. Fine grained attribution on a 3,700 to 1 imbalance
+          is not solved here, and the knob is how the system declines instead of guessing.</p>
+          <span class="cite">metrics.json : per_class_pr_auc</span>
+        </li>
+        <li>
+          <h3>It is not deployed anywhere public</h3>
+          <p>Containerised and CI tested, but there is no live URL. Until there is, I say
+          "built and shipped", not "deployed".</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

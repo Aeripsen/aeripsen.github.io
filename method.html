@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Method: how I run parallel work without lying to myself</title>
+<meta name="description" content="One file per worker so edits cannot collide, contracts that are machine checkable instead of self reported, a verification layer whose default is to refute, and deliberate routing of bulk work to cheap models.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main id="main">
+
+<section class="proj-head">
+  <div class="wrap">
+    <a class="backlink" href="index.html">&#8592; index</a>
+    <span class="eyebrow">Method</span>
+    <h1>How I run more parallel work than one person should be able to</h1>
+    <p class="lede">
+      Across the research and the sites I fan work out across a fleet of automated workers. That is
+      not the interesting part, because anyone can start a lot of processes. The interesting part is
+      the scaffolding that makes the output trustworthy: <strong>ownership rules so writes cannot
+      collide, contracts that are checked by machine rather than self reported, and a verification
+      layer whose default answer is no.</strong>
+    </p>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The framing</span></div>
+    <div>
+      <p>
+        Treat a fleet of workers as a concurrent system, because that is what it is. It has the same
+        three failure modes as any concurrent system: two writers touching the same state, a worker
+        that reports success it did not achieve, and a result nobody can reproduce. Every rule below
+        exists to close one of those.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The rules</span></div>
+    <div>
+      <ul class="speclist">
+        <li>
+          <h3>One file per worker. No exceptions.</h3>
+          <p>Work is partitioned so two workers can never hold the same file. It is lock granularity
+          chosen at the file level, and it means parallel edits merge trivially because they were
+          never allowed to overlap in the first place. Getting this partition right is most of the
+          design work, and it is done before anything starts.</p>
+        </li>
+        <li>
+          <h3>Contracts with self tests a machine can run</h3>
+          <p>Every worker gets a written contract, and the contract's acceptance criteria are
+          countable, not descriptive. On the charity site that means: bilingual span parity, every
+          link and image source and element id preserved, a zero count against a list of forbidden
+          phrases, and byte fidelity on blocks that are not allowed to change. A worker reports
+          numbers. <strong>I read every diff before anything ships</strong>, and the numbers tell me
+          where to look first.</p>
+        </li>
+        <li>
+          <h3>A verification layer that defaults to refuting</h3>
+          <p>Findings do not get accepted, they get attacked. Each one goes to independent skeptics
+          whose instruction is to refute it, and only what survives goes in. It is a council of
+          judges rather than a reviewer, and it is deliberately biased toward rejection, because a
+          reviewer that agrees with you is a rubber stamp with extra steps.</p>
+        </li>
+        <li>
+          <h3>Route bulk work to the cheapest thing that can do it</h3>
+          <p>Extraction, translation drafting and other high volume mechanical work go through my
+          own router to free tier models, in a fallback chain, so a recurring weekly workload costs
+          effectively nothing. Judgment, wording, religious content and anything that touches
+          production stay with me. That split is a cost decision made on purpose, not a limitation
+          I ran into.</p>
+        </li>
+        <li>
+          <h3>Guardrails as operational rules, not intentions</h3>
+          <p>Production deploys are gated on my explicit approval. One collaborator owned page is
+          excluded from automation entirely and has to stay byte identical. Changeable facts are cite
+          or cut, verified against the primary source with the date recorded, and Islamic calendar
+          dates are checked against the organisation's own published sources every time.</p>
+        </li>
+        <li>
+          <h3>A runbook written for someone less capable than the person who wrote it</h3>
+          <p>The weekly content routine is documented hard rules first, so it can be executed
+          correctly by a weaker model or by a new volunteer with no context. If a process only works
+          when I run it, it is not a process, it is a habit.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Proof</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">The reason I trust it is that it caught me.</h2>
+      <p>
+        The verification layer recounted my own data and came back with something I did not want:
+        <strong>the numbers reproduce, but the mechanism you have written down is wrong.</strong> I
+        had an explanation that fit the result and was not what the result actually showed. It did
+        not ship. I corrected it first.
+      </p>
+      <p>
+        That is the whole argument for building this instead of just working faster. Speed is easy to
+        buy. A system that contradicts its own owner, on his own data, before anyone outside sees it,
+        is the part that is hard, and it is the part that made the
+        <a href="flowsentry.html">FlowSentry benchmark</a> publishable when the result went against
+        my architecture.
+      </p>
+      <div class="note">
+        <span class="eyebrow">Where it is running</span>
+        <p>
+          This is in production today, not a proposal. It runs the weekly content operation on
+          <a href="imic.html">imammahdi.ca</a>, the literature and design passes on the
+          <a href="ids.html">four protocol IDS</a>, and the artifact verification behind every number
+          on this site. The harness is Claude Code; the orchestration, the partitioning, the
+          contracts and the guardrails are mine, and they would transfer to a different harness
+          unchanged.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Applied here</span></div>
+    <div>
+      <p>
+        Every figure on this site was read out of a committed artifact, and the artifact path sits
+        under it in small type so you can go and check. Where a number would flatter me and is not
+        supported, it is not on the page. Where a result went against me, it is on the page with the
+        same weight as the ones that did not.
+      </p>
+      <p>
+        That is a policy, and it is cheap to state and expensive to keep. It is also the only reason
+        any of the other numbers are worth reading.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sepehr Jafari, network security and machine learning</title>
+<meta name="description" content="First author on an accepted SECRYPT 2026 paper on UDP and QUIC intrusion detection. I build detectors that measure their own confidence, and I publish the measurements that go against me.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
+<meta property="og:title" content="Sepehr Jafari, network security and machine learning">
+<meta property="og:description" content="I build detectors that measure their own confidence, and I publish the measurements that go against me.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<noscript><p style="padding:1rem;font-family:monospace"><a href="index.html">home</a> · <a href="research.html">research</a> · <a href="ids.html">iot ids</a> · <a href="flowsentry.html">flowsentry</a> · <a href="ledgersentry.html">ledgersentry</a> · <a href="imic.html">imammahdi.ca</a> · <a href="method.html">method</a></p></noscript>
+
+<main id="main">
+
+<!-- ============ hero: the thesis, and the instrument that proves it ============ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Toronto</span>
+      <h1>I build detectors that know when to <em>abstain</em>.</h1>
+      <p class="hero-sub">
+        Math and statistics at the University of Toronto, and a research assistant in network
+        security. First author on an accepted SECRYPT 2026 paper on UDP and QUIC intrusion
+        detection, with the 1.22 million flow dataset published behind it. Right now I am
+        architecting a detector that spans four wireless protocols at once.
+      </p>
+      <div class="hero-meta">
+        <span class="tag tag-paper">SECRYPT 2026, first author</span>
+        <span class="tag tag-live">2 public detectors shipped</span>
+        <span class="tag tag-build">4 protocol IoT IDS in progress</span>
+      </div>
+    </div>
+
+    <div class="instrument">
+      <div class="instrument-head">
+        <h2>Reject knob, FlowSentry</h2>
+        <span class="tag">held-out test split</span>
+      </div>
+
+      <canvas id="flowgrid" width="730" height="300"
+              role="img"
+              aria-label="A grid of 2,190 tiles standing in for the 6,570 held-out flows. Tiles the model answers correctly are cyan, tiles it answers wrongly are rose, tiles it abstains on are grey."></canvas>
+
+      <div class="legend">
+        <span><i style="background:var(--signal)"></i> answered, right</span>
+        <span><i style="background:var(--warn)"></i> answered, wrong</span>
+        <span><i style="background:var(--abstain)"></i> abstained</span>
+      </div>
+
+      <div class="knob">
+        <label for="knob">
+          <span>reject threshold</span>
+          <b id="out-threshold">0.00</b>
+        </label>
+        <input type="range" id="knob" min="0" max="6" step="1" value="0"
+               aria-label="Reject threshold, stepping through the seven measured values">
+      </div>
+
+      <div class="readout">
+        <div>
+          <span class="k">answers</span>
+          <span class="v v-accent" id="out-coverage">100.0%</span>
+        </div>
+        <div>
+          <span class="k">and is right</span>
+          <span class="v v-signal" id="out-reliability">83.2%</span>
+        </div>
+        <div>
+          <span class="k">flows abstained</span>
+          <span class="v" id="out-abstained">0</span>
+        </div>
+      </div>
+
+      <p class="cite" style="margin-top:0.9rem">
+        Drag it. The seven stops are the seven thresholds actually measured in
+        <code>flowsentry/artifacts/metrics.json : coverage_reliability_curve</code>, on
+        <span id="out-n">6,570</span> held-out flows. Each tile stands for 3 flows, so the
+        picture reproduces the measured coverage and reliability, not per flow scores.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ what the knob is for ============ -->
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head">
+      <span class="eyebrow">The idea</span>
+    </div>
+    <div>
+      <p class="lede">
+        A classifier that answers every question is a classifier that lies on the hard ones.
+        The knob above is the whole argument: <strong>let the model decline</strong>, and you can
+        trade how much it covers against how often it is right, on a curve you measured rather than
+        a number you hoped for.
+      </p>
+      <p>
+        That is the contribution of my SECRYPT paper, and it is the spine of everything on this
+        site: a network intrusion detector, a card fraud detector, and the four protocol IoT system
+        I am building now all expose the same control. The interesting engineering is not the model.
+        It is knowing which flows you are allowed to be confident about, and proving it on a split
+        that cannot leak.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ the ledger ============ -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Numbers, with the file they came out of</span>
+    <div class="ledger">
+      <div>
+        <span class="num v-signal">0.977</span>
+        <span class="lbl">Binary attack detection PR-AUC, on a split grouped by connection so no
+        5-tuple appears in both folds.</span>
+        <span class="cite">flowsentry/artifacts/metrics.json : binary_attack_detection_pr_auc</span>
+      </div>
+      <div>
+        <span class="num">1.22M</span>
+        <span class="lbl">Labelled UDP and QUIC flows in the public dataset behind my first authored
+        SECRYPT 2026 paper.</span>
+        <span class="cite">BCCC-UDP-QUIC-IDS-2025, published by the lab, CC BY 4.0</span>
+      </div>
+      <div>
+        <span class="num v-accent">[0.62, 0.82]</span>
+        <span class="lbl">The 95% bootstrap interval I printed next to LedgerSentry's headline,
+        because 75 fraud cases cannot earn four decimals.</span>
+        <span class="cite">ledgersentry/artifacts/bootstrap_ulb_creditcard.json (ADR 007)</span>
+      </div>
+      <div>
+        <span class="num v-warn">1.9&times;</span>
+        <span class="lbl">How much faster a plain 60 tree forest serves than my own two stage
+        architecture. I measured it, published it, and withdrew the claim.</span>
+        <span class="cite">flowsentry/artifacts/hierarchy_benchmark.json, ADR 001</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ work ============ -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Work</span>
+    <h2 style="margin-bottom:1.75rem">Five things, in the order I would defend them.</h2>
+
+    <div class="work">
+      <a class="work-item" href="research.html">
+        <span class="work-year">2025/26</span>
+        <span>
+          <span class="work-title">Hierarchical UDP and QUIC intrusion detection</span>
+          <span class="work-desc">First authored, accepted to SECRYPT 2026. A two stage detector with
+          a reject option, and a new 1.22 million flow labelled dataset the lab released publicly.</span>
+        </span>
+        <span class="work-go">paper, dataset, analyzers</span>
+      </a>
+
+      <a class="work-item" href="ids.html">
+        <span class="work-year">2026, live</span>
+        <span>
+          <span class="work-title">Four protocol IoT intrusion detection</span>
+          <span class="work-desc">BLE, Zigbee, Z-Wave and Wi-Fi on one live testbed of real devices,
+          labelled at the decoded application layer instead of the wire. Being architected now, not
+          shipped.</span>
+        </span>
+        <span class="work-go">design and testbed</span>
+      </a>
+
+      <a class="work-item" href="imic.html">
+        <span class="work-year">2026, live</span>
+        <span>
+          <span class="work-title">imammahdi.ca</span>
+          <span class="work-desc">A 13 page bilingual site for a registered Canadian charity, with a
+          generative night sky that draws the real moon phase, astronomically grounded prayer times,
+          and a Python content system feeding it. Volunteer work I own and run weekly.</span>
+        </span>
+        <span class="work-go">live site</span>
+      </a>
+
+      <a class="work-item" href="flowsentry.html">
+        <span class="work-year">2026</span>
+        <span>
+          <span class="work-title">FlowSentry</span>
+          <span class="work-desc">My paper's architecture turned into a real service, then
+          benchmarked against simpler baselines until it lost, and the losing result published.</span>
+        </span>
+        <span class="work-go">public repo</span>
+      </a>
+
+      <a class="work-item" href="ledgersentry.html">
+        <span class="work-year">2026</span>
+        <span>
+          <span class="work-title">LedgerSentry</span>
+          <span class="work-desc">The same engine pointed at card fraud. The differentiator is not
+          the model, it is the temporal split, the interval, and a calibrator chosen on a rule fixed
+          before anything was fitted.</span>
+        </span>
+        <span class="work-go">public repo</span>
+      </a>
+
+      <a class="work-item" href="https://ctftime.org/team/280084/" rel="noopener">
+        <span class="work-year">2025</span>
+        <span>
+          <span class="work-title">UofT CTF, 3rd place</span>
+          <span class="work-desc">With BYTE BABIES, who also finished 3rd in Canada on CTFtime's 2025
+          country ranking across a full season of events.</span>
+        </span>
+        <span class="work-go">ctftime.org &#8599;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ method teaser ============ -->
+<section>
+  <div class="wrap cols">
+    <div class="col-head">
+      <span class="eyebrow">How I work</span>
+    </div>
+    <div>
+      <h2 style="margin-bottom:1rem">I run more parallel work than one person should be able to,
+      because I built the scaffolding to keep it honest.</h2>
+      <p>
+        On the research and on the sites, I fan work out across a fleet of agents and hold the
+        result to contracts I write: one file per agent so edits cannot collide, self tests that are
+        machine checkable rather than a summary I have to trust, and a verification layer whose
+        default is to refute. Bulk extraction routes to cheap models on purpose. Judgment, wording
+        and anything touching production stay with me.
+      </p>
+      <p>
+        The reason I trust it is that it has caught me. It recounted my own data and told me the
+        numbers reproduced but my stated mechanism was wrong, and I had to correct it before it
+        shipped. A system that fact checks its owner is worth more than one that agrees with him.
+      </p>
+      <p><a href="method.html">How the orchestration is actually built &#8599;</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ contact ============ -->
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Elsewhere</span></div>
+    <div>
+      <p class="lede" style="margin-bottom:1.25rem">
+        Open to research and to security or machine learning internships. Toronto, or remote in Canada.
+      </p>
+      <p class="mono" style="font-size:0.85rem;line-height:2">
+        <a href="mailto:sepehr1381ja@gmail.com">sepehr1381ja@gmail.com</a><br>
+        <a href="https://github.com/Aeripsen" rel="me noopener">github.com/Aeripsen</a><br>
+        <a href="https://orcid.org/0009-0002-8610-112X" rel="me noopener">orcid.org/0009-0002-8610-112X</a><br>
+        <a href="https://www.linkedin.com/in/sepehr-jafari-fesharaki" rel="me noopener">linkedin.com/in/sepehr-jafari-fesharaki</a><br>
+        <a href="https://ctftime.org/team/280084/" rel="noopener">ctftime.org/team/280084</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script src="assets/site.js"></script>
+<script src="assets/instrument.js"></script>
+</body>
+</html>

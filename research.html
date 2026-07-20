@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research: UDP and QUIC intrusion detection, SECRYPT 2026</title>
+<meta name="description" content="First authored, accepted to SECRYPT 2026: a two stage UDP and QUIC intrusion detector with a reject option, plus the 1.22 million flow public dataset and the flow extractors behind it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main id="main">
+
+<section class="proj-head">
+  <div class="wrap">
+    <a class="backlink" href="index.html">&#8592; index</a>
+    <span class="eyebrow">Peer reviewed / accepted</span>
+    <h1>Hierarchical UDP and QUIC intrusion detection, with a reject option</h1>
+    <p class="lede">
+      First author. Accepted to <strong>SECRYPT 2026</strong>, the International Conference on
+      Security and Cryptography. The paper pairs a two stage detector that is allowed to say
+      "I do not know" with a new labelled dataset of <strong>1.22 million UDP and QUIC flows</strong>,
+      which the lab released publicly under CC BY 4.0.
+    </p>
+    <div class="proj-links">
+      <a href="https://orcid.org/0009-0002-8610-112X" rel="me noopener">ORCID 0009-0002-8610-112X &#8599;</a>
+      <a href="http://bccc.laps.yorku.ca/BCCC-UDP-QUIC-IDS-2025/" rel="noopener">Dataset files &#8599;</a>
+      <a href="https://github.com/ahlashkari/QUICFlowLyzer" rel="noopener">QUICFlowLyzer &#8599;</a>
+      <a href="https://github.com/ahlashkari/UDPFlowLyzer" rel="noopener">UDPFlowLyzer &#8599;</a>
+      <a href="https://secrypt.scitevents.org/" rel="noopener">SECRYPT &#8599;</a>
+    </div>
+    <div class="tags">
+      <span class="tag tag-paper">first author</span>
+      <span class="tag">accepted, camera ready submitted</span>
+      <span class="tag">with co-authors and my supervisor</span>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The problem</span></div>
+    <div>
+      <p>
+        QUIC moved a large share of the web onto UDP and encrypted almost everything a middlebox
+        used to read. That is good for users and awkward for defenders: the fields intrusion
+        detection used to key on are gone, so detection has to work from the shape of the traffic
+        rather than its contents. Volumetric attacks hide inside that shape well.
+      </p>
+      <p>
+        The second problem is the data. Public intrusion datasets are old, mostly TCP, and rarely
+        carry QUIC at all. So the work had to produce the measurement instrument and the dataset
+        before it could produce a result.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">What is in it</span></div>
+    <div>
+      <ul class="speclist">
+        <li>
+          <h3>A two stage detector with an escalation threshold</h3>
+          <p>A cheap first stage scores a flow on UDP only features. When it is not confident enough,
+          the flow escalates to a second stage that also sees QUIC derived features. The threshold is
+          a real control, not a hyperparameter: it moves how much of the traffic the system answers
+          for against how often that answer holds up.</p>
+        </li>
+        <li>
+          <h3>A reject option, reported as a curve</h3>
+          <p><strong>The honest way to report an imbalanced detector.</strong> Instead of one accuracy
+          number, the system reports coverage against reliability across thresholds, so an operator
+          can pick the operating point their alert budget actually allows. The interactive version of
+          that curve is on <a href="index.html">the front page</a>.</p>
+        </li>
+        <li>
+          <h3>BCCC-UDP-QUIC-IDS-2025, a 1.22 million flow labelled dataset</h3>
+          <p>Generated on a controlled testbed, labelled per flow, and published by the lab under
+          CC BY 4.0 so the results can be checked by someone who does not trust me. Attack families
+          cover several classes of UDP and QUIC flooding and evasion.</p>
+          <span class="cite">bccc.laps.yorku.ca/BCCC-UDP-QUIC-IDS-2025/ (served over HTTP)</span>
+        </li>
+        <li>
+          <h3>Two open source flow feature extractors</h3>
+          <p>QUICFlowLyzer and UDPFlowLyzer, the tools that turn packet captures into the flow
+          feature vectors everything downstream consumes. They live in my lab's GitHub organisation
+          alongside its other analyzers, and they are the reason I can defend any single feature in
+          the model for as long as someone wants to ask.</p>
+          <span class="cite">github.com/ahlashkari (Behaviour Centric Cybersecurity Centre)</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The hard part</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">The class imbalance is the whole story.</h2>
+      <p>
+        Real attack traffic is not balanced and pretending otherwise is how intrusion detection
+        papers get to report numbers nobody can reproduce operationally. In the UDP portion of this
+        dataset the largest attack class carries <strong>621,177 flows</strong> and the smallest
+        carries <strong>166</strong>. That is a ratio of roughly 3,700 to 1.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Class</th><th scope="col">Flows</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>UDP-RAW</td><td>621,177</td></tr>
+            <tr><td>UDP-VSE</td><td>307</td></tr>
+            <tr><td>UDP-OVH</td><td>243</td></tr>
+            <tr><td>UDP-MULTI</td><td>209</td></tr>
+            <tr><td>UDP-HULK</td><td>197</td></tr>
+            <tr><td>UDP-bypass-v1</td><td>171</td></tr>
+            <tr><td>UDP-GAME</td><td>166</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cite table-note">
+        UDP class counts before any resampling, from the dataset's own label distribution.
+      </p>
+      <p>
+        Detecting <em>that there is an attack</em> on this data is very achievable. Attributing it to
+        the right family, when one family has four thousand times the evidence of another, is an open
+        problem rather than a bug someone forgot to fix. The reject option is the honest response:
+        the system declines the calls it cannot support instead of guessing and calling the guess a
+        result.
+      </p>
+      <div class="note">
+        <span class="eyebrow">A note on splits</span>
+        <p>
+          Flows from one connection resemble each other. If a random split puts some of a
+          connection's flows in training and the rest in test, the score that comes out is partly
+          memorisation. My own reimplementation, <a href="flowsentry.html">FlowSentry</a>, therefore
+          splits by connection so no 5-tuple appears in both folds, and reports lower numbers than a
+          random split would give. Different protocols produce different numbers, and comparing
+          across them as if it were a scoreboard is not a comparison.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Where it goes</span></div>
+    <div>
+      <p>
+        Two directions came out of this. One is deployment: taking the architecture out of the paper
+        and making it serve requests, which is <a href="flowsentry.html">FlowSentry</a>, and which is
+        where I found out that my own architecture loses to a simpler baseline on the shipped sample.
+      </p>
+      <p>
+        The other is scope. UDP and QUIC are one protocol family on one link. The system I am
+        <a href="ids.html">architecting now</a> does the same job across BLE, Zigbee, Z-Wave and
+        Wi-Fi at once, on real devices, with labels taken from the decoded application layer instead
+        of the wire.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

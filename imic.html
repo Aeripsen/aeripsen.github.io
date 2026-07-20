@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>imammahdi.ca, a bilingual charity site with a real sky in it</title>
+<meta name="description" content="A 13 page bilingual English and Farsi site for a registered Canadian charity: a Canvas 2D night sky drawing the true moon phase, astronomically grounded prayer times, a Jalali calendar, browser synthesized ambient audio, and a Python content system, deployed by GitHub Actions.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main id="main">
+
+<section class="proj-head">
+  <div class="wrap">
+    <a class="backlink" href="index.html">&#8592; index</a>
+    <span class="eyebrow">Live in production, volunteer</span>
+    <h1>imammahdi.ca</h1>
+    <p class="lede">
+      A 13 page bilingual English and Farsi site for the Imam Mahdi Islamic Centre, a registered
+      Canadian charity in Thornhill, Ontario. It has a live generative night sky that renders the
+      <strong>real</strong> moon phase and the real position of the sun, prayer times computed to a
+      stated astronomical method with a public page explaining it, a from scratch Persian and
+      Gregorian calendar, an ambient soundscape synthesized in the browser, and a Python content
+      system that turns the mosque's Telegram posts into the site's events.
+    </p>
+    <div class="proj-links">
+      <a href="https://imammahdi.ca" rel="noopener">imammahdi.ca &#8599;</a>
+    </div>
+    <div class="tags">
+      <span class="tag tag-live">live, maintained weekly</span>
+      <span class="tag">no framework, no build step</span>
+      <span class="tag">installable PWA</span>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap">
+    <div class="note">
+      <span class="eyebrow">My role, stated exactly</span>
+      <p>
+        This is volunteer work. I rebuilt the current public site, I own the repository and the
+        deployment, and I maintain it week to week. I did not build the organisation, and I did not
+        write every page that has ever existed on that domain: one page is maintained separately by
+        another volunteer, and there were contributors before me.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The sky</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">One Canvas 2D engine drives the hero of every page.</h2>
+      <p>
+        It composites a three layer parallax starfield of roughly 800 to 1400 seeded stars with a
+        magnitude and colour distribution, a Milky Way band built from seeded luminance blobs, and a
+        slowly rotating Islamic girih pattern traced as a constellation. Below that sits a mosque
+        skyline silhouette with an onion dome, a hilal finial and window glow blooms, procedural
+        cumulus and cirrus banks rendered in separate sunlit crown and shaded base passes, and rare
+        shooting stars.
+      </p>
+      <ul class="speclist">
+        <li>
+          <h3>The moon is drawn at its true phase</h3>
+          <p>Synodic age is computed from a known new moon epoch, and the terminator is rendered by
+          compositing an offscreen canvas, with maria, earthshine and craters on top. It is not a
+          decorative crescent. If you look up, it matches.</p>
+        </li>
+        <li>
+          <h3>The sky and the prayer times cannot disagree</h3>
+          <p>The sun is placed at its real position on a horizon arc, and the page's whole colour
+          temperature, <code>html[data-phase]</code> as night, dawn, day or dusk, is derived from
+          <strong>the same live prayer time data that renders the prayer cards</strong>. One source,
+          so the picture and the numbers can never drift apart.</p>
+        </li>
+        <li>
+          <h3>Performance, because the congregation is on low end Android</h3>
+          <p>devicePixelRatio capped at 2. Static layers pre rendered once per resize into offscreen
+          canvases, so a frame is three <code>drawImage</code> calls. IntersectionObserver plus the
+          Page Visibility API to stop work nobody can see. An FPS watchdog that sheds the Milky Way
+          and freezes the constellation rotation when the frame rate drops.</p>
+        </li>
+        <li>
+          <h3>Reduced motion is honoured properly</h3>
+          <p>Not "animations run slower". The canvas falls back to a single static painting.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Prayer times</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">The times, and a public page explaining why they are those times.</h2>
+      <p>
+        Times come from the Aladhan API using calculation method 7, the Institute of Geophysics at
+        the University of Tehran, with Fajr at 17.7 degrees, Maghrib at 4.5 and Isha at 14, and
+        <code>midnightMode=1</code> for Jafari midnight, all behind a <code>window.PRAYER_API</code>
+        abstraction so the source can be swapped.
+      </p>
+      <ul class="speclist">
+        <li>
+          <h3>A 24 hour SVG dial</h3>
+          <p>An elapsed day arc, the six daily times plotted as markers at their true angular
+          positions, a next prayer glow, a live countdown in the ring centre, and a tinted disc that
+          follows the real phase of day. Reference times, meaning sunrise, sunset and midnight, are
+          visually distinguished from the five prayers so the dial does not imply six obligations.</p>
+        </li>
+        <li>
+          <h3>A Qibla compass computed, not looked up</h3>
+          <p>Great circle initial bearing calculated in JavaScript from the mosque's coordinates,
+          drawn as a compass rose with a gold needle.</p>
+        </li>
+        <li>
+          <h3>A method explainer, with an instrument on it</h3>
+          <p>A public page for why this centre's times differ from two nearby centres while matching
+          the mainstream Iranian tables. It carries a live four method comparison table, an
+          interactive SVG sun depth control (a 0 to 20 degree slider showing horizon redness fading
+          past the Maghrib threshold), and a numeric cross check: pointing the same engine at Tehran
+          reproduced published Iranian timetables to the minute. The research behind it is a
+          27 source cited brief.</p>
+        </li>
+      </ul>
+      <div class="note">
+        <span class="eyebrow">Scope</span>
+        <p>
+          I implemented the calculation method the Centre follows and made it transparent. I am not
+          a religious authority and the page does not rule on anything. It states which method is in
+          use, shows the parameters, and lets a visitor compare.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Bilingual, properly</span></div>
+    <div>
+      <p>
+        Full RTL using CSS logical properties, Vazirmatn scoped to Persian glyphs with
+        <code>unicode-range</code>, the <code>&lt;html lang&gt;</code> attribute tracking the language
+        toggle, and Persian-Indic digits rendered through <code>Intl</code> with the
+        <code>fa-IR</code> locale.
+      </p>
+      <p>
+        The calendar is a from scratch month grid carrying <strong>both</strong> the Jalali and the
+        Gregorian date in every cell, verified against the mosque's own printed posters. In Farsi the
+        week starts on Saturday, so the grid re lays itself through a MutationObserver on the
+        language toggle and puts Saturday rightmost in RTL.
+      </p>
+      <p>
+        Detail that cost me an afternoon and is worth knowing: <strong>logical insets flip in RTL</strong>,
+        so any fixed corner UI has to be checked in both directions or it ends up under your thumb in
+        one language and across the screen in the other.
+      </p>
+      <p>
+        Content is data driven from <code>events.json</code>, <code>thisweek.json</code> and
+        <code>guests.json</code>: recurring programs, dated one off events that retire themselves
+        after their date, a weekly overlay for the prayer leader and lecture topic, and a speakers
+        archive. Every read goes through one accessor behind a <code>DATA_MODE</code> switch, so a
+        real backend can be dropped in without a rewrite.
+      </p>
+      <p>
+        Accessibility throughout: skip links, <code>:focus-visible</code> rings,
+        <code>aria-current</code> on navigation, <code>aria-live</code> readouts on the interactive
+        instruments, and every animation gated on <code>prefers-reduced-motion</code>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Audio</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">An ambient soundscape with no audio files, at first.</h2>
+      <p>
+        Opt in, built with the Web Audio API: brown noise shaped by a gusting lowpass with two slow
+        LFOs for wind, bandpassed noise bands plus scheduled sine chirps for a stream, a triangle
+        wave bird phrase scheduler, and gated pulse train oscillators for crickets, all through a
+        high shelf filter and a DynamicsCompressor.
+      </p>
+      <p>
+        The mix follows the sky. Presets change with the solar phase until a visitor touches a
+        slider, after which their own mix is remembered in <code>localStorage</code>. Later I replaced
+        two synth voices with CC0 and public domain field recordings from Wikimedia Commons, trimmed
+        and loudness normalized with ffmpeg to roughly 325 KB and 450 KB <code>.m4a</code> files,
+        fetched lazily and crossfaded over the synth, which stays as the instant start and offline
+        fallback. Everything ramps over seconds, and muting calls
+        <code>AudioContext.suspend()</code> so an idle tab costs nothing.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Content system</span></div>
+    <div>
+      <p>Three Python tools I wrote, all doing unglamorous work that has to be right every week.</p>
+      <ul class="speclist">
+        <li>
+          <h3><code>telegram_pull.py</code></h3>
+          <p>A standard library only scraper of the mosque's public Telegram channels that maintains
+          a growing archive: a JSON index keyed by channel and post, images downloaded under stable
+          filenames, and a browsable Markdown history, with backward pagination to seed the past. It
+          exists because Telegram's CDN URLs expire, so posters have to be captured and self hosted or
+          the site's history rots.</p>
+        </li>
+        <li>
+          <h3><code>telegram_harvest.py</code></h3>
+          <p>Recovers real <code>.mp4</code> URLs from Telegram's embed pages and downloads them with
+          HTTP Range requests, de duplicating album posts.</p>
+        </li>
+        <li>
+          <h3><code>draft_events.py</code></h3>
+          <p>Drafts bilingual event records through a router that tries free tier models in order, so
+          the routine extraction costs nothing to run every week. Drafts only. Wording, especially
+          religious wording, is mine.</p>
+        </li>
+      </ul>
+      <p>
+        Media handling with ffmpeg (H.264 re encode with <code>-movflags +faststart</code>, poster
+        frame extraction) and Pillow for thumbnails. One event's registration link only existed
+        inside a QR code on a low resolution poster, so I decoded it out with OpenCV.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Ship and harden</span></div>
+    <div>
+      <ul class="speclist">
+        <li>
+          <h3>Continuous deployment</h3>
+          <p>A GitHub Actions workflow rsyncs over SSH to cPanel hosting using a dedicated deploy key
+          held as a repository secret, and stamps a cache buster on the way out.</p>
+        </li>
+        <li>
+          <h3>A hand written service worker</h3>
+          <p>Network first for navigations and for JSON data, so a visitor never gets a stale
+          announcement, and old caches are purged on every build stamp. With
+          <code>manifest.json</code>, the site is installable.</p>
+        </li>
+        <li>
+          <h3>Server configuration</h3>
+          <p>Apache and LiteSpeed rules for long lived immutable caching on fingerprinted assets,
+          short revalidated caching on HTML, gzip, the standard security response headers
+          (Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+          Permissions-Policy), and rules denying source and backup file types.</p>
+        </li>
+        <li>
+          <h3>A security hardening pass on the live host</h3>
+          <p>Filesystem permission remediation across the document root, access control on non public
+          directories, credential hygiene, and a backdoor and malware audit. Every change made
+          reversibly and verified against the live site afterwards. <strong>Deliberately described at
+          this level and no lower.</strong> This is a real charity's infrastructure, and the specifics
+          are not portfolio material.</p>
+        </li>
+        <li>
+          <h3>Findable and shareable</h3>
+          <p>Open Graph and Twitter card metadata per page, and JSON-LD <code>Mosque</code> structured
+          data.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The standard</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">The page I had to rewrite.</h2>
+      <p>
+        I wrote a page explaining the symbolism of the site's geometric patterns. A cited research
+        pass came back and showed my first draft attributed sectarian meanings to Islamic geometric
+        patterns that historians do not support. The published version uses only cross sectarian,
+        historically grounded language.
+      </p>
+      <p>
+        On a community site, being wrong in public is the actual failure mode. So changeable facts,
+        and especially Islamic calendar dates, are cite or cut: verified against the organisation's
+        own published sources, with the date recorded.
+      </p>
+      <p style="margin-top:1.5rem">
+        <a href="method.html">How this site is actually built and operated &#8599;</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Planned, not built</span></div>
+    <div>
+      <p>
+        Three things are on the roadmap and are <strong>not shipped</strong>: a donations backend
+        (evaluating Zeffy for zero fee processing with automatic Canadian tax receipts, alongside
+        PayPal Giving Fund), a Directus headless CMS behind the existing <code>DATA_MODE</code>
+        switch so staff can edit content without touching code, and staying a PWA rather than
+        building a native app.
+      </p>
+      <div class="stack">
+        <span class="tag">JavaScript, ES modules</span><span class="tag">HTML5 Canvas 2D</span>
+        <span class="tag">SVG</span><span class="tag">Web Audio API</span>
+        <span class="tag">Service Workers, PWA</span><span class="tag">IntersectionObserver</span>
+        <span class="tag">MutationObserver</span><span class="tag">CSS logical properties, RTL</span>
+        <span class="tag">i18n, English and Farsi</span><span class="tag">Python</span>
+        <span class="tag">ffmpeg</span><span class="tag">Pillow</span><span class="tag">OpenCV</span>
+        <span class="tag">REST (Aladhan)</span><span class="tag">GitHub Actions</span>
+        <span class="tag">rsync over SSH</span><span class="tag">Apache and LiteSpeed</span>
+        <span class="tag">cPanel and Linux</span><span class="tag">HTTP security headers</span>
+        <span class="tag">WCAG practices</span><span class="tag">JSON-LD</span>
+        <span class="tag">computational astronomy</span><span class="tag">Jalali and Hijri calendars</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

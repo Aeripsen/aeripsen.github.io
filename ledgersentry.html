@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LedgerSentry, card fraud detection with the interval printed</title>
+<meta name="description" content="Real time card fraud detection on the ULB dataset. The differentiator is not the model, it is the temporal split, the published confidence interval, and a calibrator chosen on a rule fixed before fitting.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main id="main">
+
+<section class="proj-head">
+  <div class="wrap">
+    <a class="backlink" href="index.html">&#8592; index</a>
+    <span class="eyebrow">Public repo, 2026</span>
+    <h1>LedgerSentry</h1>
+    <p class="lede">
+      The same engine as <a href="flowsentry.html">FlowSentry</a>, pointed at card fraud. It runs on
+      the most used fraud dataset on earth, which means the model cannot be the differentiator.
+      <strong>The rigor is.</strong> A split ordered by time instead of shuffled, a confidence
+      interval printed next to the headline, and a calibrator picked by a rule I fixed before I
+      fitted anything.
+    </p>
+    <div class="proj-links">
+      <a href="https://github.com/Aeripsen/ledgersentry" rel="noopener">github.com/Aeripsen/ledgersentry &#8599;</a>
+    </div>
+    <div class="tags">
+      <span class="tag tag-live">public and reproducible</span>
+      <span class="tag">80 tests green</span>
+      <span class="tag">6 ADRs, model card</span>
+      <span class="tag">reproduces from raw public data</span>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap">
+    <div class="ledger">
+      <div>
+        <span class="num v-signal">0.728</span>
+        <span class="lbl">PR-AUC on a strict temporal holdout, against a no skill baseline of
+        0.0013. Roughly a 550 times lift.</span>
+        <span class="cite">artifacts/metrics_ulb_creditcard.json : pr_auc, pr_auc_random_baseline</span>
+      </div>
+      <div>
+        <span class="num v-accent">[0.62, 0.82]</span>
+        <span class="lbl">The 95% bootstrap interval on that headline. It is 0.20 wide, and I
+        published it anyway.</span>
+        <span class="cite">artifacts/bootstrap_ulb_creditcard.json, ADR 007</span>
+      </div>
+      <div>
+        <span class="num">84%</span>
+        <span class="lbl">Of fraud caught at full coverage, 95% CI [0.75, 0.92], across 75 real
+        fraud cases in a 56,961 row test fold.</span>
+        <span class="cite">metrics_ulb_creditcard.json : recall_at_full_coverage, n_test, n_test_fraud</span>
+      </div>
+      <div>
+        <span class="num">1.7 ms</span>
+        <span class="lbl">p99 scoring latency, inside a 10 ms authorization budget. The repo records
+        the verdict as MEETS.</span>
+        <span class="cite">artifacts/benchmark_ulb_creditcard.json : single_row.compiled.p99_ms</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Why an interval</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">Seventy five positives cannot earn four decimals.</h2>
+      <p>
+        The test fold has 56,961 transactions and 75 of them are fraud. Any metric computed on 75
+        events has a wide interval around it, and reporting <code>0.7278</code> without one invites a
+        reader to believe the fourth decimal. Bootstrapping gives
+        <strong>[0.6214, 0.8232]</strong>, which is wide enough to change how you would read the
+        result.
+      </p>
+      <p>
+        There is a second reason to publish it. A separate calibration run of this model scored
+        0.7544, and it would be easy to quote the bigger number as an improvement. It sits inside the
+        interval, so <strong>it is not a demonstrated difference</strong>, and the repo says so about
+        itself. The recall interval was cross checked a second way, with a closed form Wilson bound,
+        and the two methods agree to about one point.
+      </p>
+      <div class="note">
+        <span class="eyebrow">Do not mix these two</span>
+        <p>
+          0.7278 is the shipped model, trained on the whole training fold. 0.7544 belongs to the
+          calibration experiment, whose model was fitted on 80% so the rest could be held back to
+          calibrate. Different runs, not a before and after.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The three decisions</span></div>
+    <div>
+      <ul class="speclist">
+        <li>
+          <h3>Split by time, not by shuffle</h3>
+          <p>Fraud has patterns that move. A shuffled split trains on Tuesday and tests on Monday,
+          which is a model scoring itself on the future it already saw. A time ordered holdout scores
+          lower and is the only number worth quoting.</p>
+        </li>
+        <li>
+          <h3>PR-AUC, and the proof that ROC-AUC would have flattered me</h3>
+          <p>At a 0.13% base rate, accuracy is a trap and ROC-AUC is close to one. So ADR 002 does
+          not just argue it, it measures it on identical predictions:
+          <strong>ROC-AUC 0.9740 against PR-AUC 0.7278</strong>, and <strong>accuracy 0.9971 against
+          0.9987 for always predicting legitimate</strong>. On accuracy, my model is measurably worse
+          than doing nothing at all. Those keys ship nested under <code>demoted_metrics</code> with a
+          <code>why</code> string attached, so a bare <code>roc_auc</code> can never get lifted out
+          and used as a headline.</p>
+        </li>
+        <li>
+          <h3>A calibrator chosen on a rule fixed before fitting</h3>
+          <p>The rule: the shipped calibrator must be strictly monotone, so it provably cannot damage
+          ranking. That rule selects Platt. It cut test Brier from <strong>0.00219 to 0.00052</strong>,
+          a 4.2 times improvement, with PR-AUC unchanged at 0.754. Isotonic would have scored a
+          marginally better Brier and cost PR-AUC 0.754 down to 0.673. Deciding the rule first is
+          what stopped that from looking like a good trade.</p>
+          <span class="cite">artifacts/calibration_ulb_creditcard.json : chosen_on, brier_test, pr_auc_test</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">Build and weak spots</span></div>
+    <div>
+      <p>
+        FastAPI service, dashboard, GitHub Actions CI, 80 tests, six ADRs and a model card.
+        <code>make reproduce</code> downloads the real public dataset, retrains, and fails if the
+        committed metrics move by a byte. That has been checked from a cold clone against a fresh
+        284,807 row download.
+      </p>
+      <ul class="speclist">
+        <li>
+          <h3>The dataset is the most used fraud dataset in existence</h3>
+          <p>Anonymised PCA components from a European card issuer. Everyone has run it. If I cannot
+          explain why a shuffled split leaks here, none of the above stands up, which is precisely
+          why the split is the first thing the README talks about.</p>
+        </li>
+        <li>
+          <h3>The reject knob degenerates at the high end</h3>
+          <p>Real, explainable, and written down in the repo rather than hidden behind a screenshot
+          of the good part of the curve.</p>
+        </li>
+        <li>
+          <h3>The Docker image was never build tested</h3>
+          <p>The Dockerfile is committed and the README discloses that it has not been built in CI.
+          Listing Docker on a project where the image was never built is the kind of small
+          overstatement that costs an interview, so the repo says it first.</p>
+        </li>
+      </ul>
+      <div class="stack">
+        <span class="tag">Python</span><span class="tag">scikit-learn</span>
+        <span class="tag">FastAPI</span><span class="tag">GitHub Actions</span>
+        <span class="tag">pytest</span><span class="tag">Make</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>
