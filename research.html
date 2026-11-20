@@ -100,16 +100,22 @@
   <div class="wrap cols">
     <div class="col-head"><span class="eyebrow">The result</span></div>
     <div>
-      <h2 style="margin-bottom:1rem">What the reject option bought on attacks it had never seen.</h2>
+      <h2 style="margin-bottom:1rem">What the paper measured, and what FlowSentry added.</h2>
       <p>
-        The model handles about 95% of flows at above 99.9% accuracy and sends the rest to a second stage.
-        The test that matters is attack families the model was never trained on. A forced classifier
-        called <strong>70.5%</strong> of those flows benign. With the reject threshold at 0.99, the
-        detector flagged <strong>91.4%</strong> of them as unknown instead, which sends them to a
-        person rather than waving them through. Feature selection in the same paper cut the feature
-        set from 442 to as few as 10.
+        On the 1.22 million flow benchmark the paper introduces, the detector reaches
+        <strong>97.5%</strong> accuracy against <strong>84%</strong> for a PCA plus logistic
+        regression baseline. With the reject option on, it answers <strong>94.6%</strong> of flows
+        at <strong>99.96%</strong> accuracy and sends the rest to a second stage. Feature selection
+        cut the feature set from 442 to as few as 10.
       </p>
-      <p class="cite">Figures from the paper's evaluation; the full tables are in the proceedings link above.</p>
+      <p class="cite">From the paper (<a href="https://doi.org/10.5220/0015033600004103" rel="noopener">DOI 10.5220/0015033600004103</a>).</p>
+      <p>
+        Those figures are for attack families the model had seen. In FlowSentry, my open
+        reimplementation, I tested families held out of training: forced to answer, the classifier
+        called <strong>70.5%</strong> of those flows benign; with the reject threshold at 0.99 it
+        flagged <strong>91.4%</strong> as unknown.
+      </p>
+      <p class="cite">From FlowSentry, my own public code and model card (<a href="https://github.com/Aeripsen/flowsentry" rel="noopener">github.com/Aeripsen/flowsentry</a>). Not from the paper.</p>
     </div>
   </div>
 </section>
