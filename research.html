@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Research: UDP and QUIC intrusion detection, SECRYPT 2026</title>
-<meta name="description" content="First authored, accepted to SECRYPT 2026: a two stage UDP and QUIC intrusion detector with a reject option, plus the 1.22 million flow public dataset and the flow extractors behind it.">
+<meta name="description" content="First author, SECRYPT 2026 proceedings (pages 49 to 68, DOI 10.5220/0015033600004103): a two stage UDP and QUIC intrusion detector with a reject option, plus the 1.22 million flow public dataset and the flow extractors behind it.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23080d14'/%3E%3Crect x='2' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='3' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='12' y='3' width='2' height='4' fill='%23ff6b81'/%3E%3Crect x='2' y='9' width='4' height='4' fill='%2363d3ff'/%3E%3Crect x='7' y='9' width='7' height='4' fill='%23f0a848'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -14,15 +14,16 @@
 <section class="proj-head">
   <div class="wrap">
     <a class="backlink" href="index.html">&#8592; index</a>
-    <span class="eyebrow">Peer reviewed / accepted</span>
+    <span class="eyebrow">Peer reviewed / published</span>
     <h1>Hierarchical UDP and QUIC intrusion detection, with a reject option</h1>
     <p class="lede">
-      First author. Accepted to <strong>SECRYPT 2026</strong>, the International Conference on
-      Security and Cryptography. The paper pairs a two stage detector that is allowed to say
+      First author. Published in the proceedings of <strong>SECRYPT 2026</strong>, the 23rd International
+      Conference on Security and Cryptography (pages 49 to 68, with M. Shafi and A. H. Lashkari). The paper pairs a two stage detector that is allowed to say
       "I do not know" with a new labelled dataset of <strong>1.22 million UDP and QUIC flows</strong>,
       which the lab released publicly under CC BY 4.0.
     </p>
     <div class="proj-links">
+      <a href="https://doi.org/10.5220/0015033600004103" rel="noopener">The paper, DOI 10.5220/0015033600004103 &#8599;</a>
       <a href="https://orcid.org/0009-0002-8610-112X" rel="me noopener">ORCID 0009-0002-8610-112X &#8599;</a>
       <a href="http://bccc.laps.yorku.ca/BCCC-UDP-QUIC-IDS-2025/" rel="noopener">Dataset files &#8599;</a>
       <a href="https://github.com/ahlashkari/QUICFlowLyzer" rel="noopener">QUICFlowLyzer &#8599;</a>
@@ -31,7 +32,7 @@
     </div>
     <div class="tags">
       <span class="tag tag-paper">first author</span>
-      <span class="tag">accepted, camera ready submitted</span>
+      <span class="tag">published, SECRYPT 2026 proceedings</span>
       <span class="tag">with co-authors and my supervisor</span>
     </div>
   </div>
@@ -91,6 +92,24 @@
           <span class="cite">github.com/ahlashkari (Behaviour Centric Cybersecurity Centre)</span>
         </li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap cols">
+    <div class="col-head"><span class="eyebrow">The result</span></div>
+    <div>
+      <h2 style="margin-bottom:1rem">What the reject option bought on attacks it had never seen.</h2>
+      <p>
+        The model handles about 95% of flows at above 99.9% accuracy and sends the rest to a second stage.
+        The test that matters is attack families the model was never trained on. A forced classifier
+        called <strong>70.5%</strong> of those flows benign. With the reject threshold at 0.99, the
+        detector flagged <strong>91.4%</strong> of them as unknown instead, which sends them to a
+        person rather than waving them through. Feature selection in the same paper cut the feature
+        set from 442 to as few as 10.
+      </p>
+      <p class="cite">Figures from the paper's evaluation; the full tables are in the proceedings link above.</p>
     </div>
   </div>
 </section>
