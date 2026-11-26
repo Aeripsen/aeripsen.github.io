@@ -1,5 +1,2 @@
 User-agent: *
 Allow: /
-Disallow: /Sepehr_Jafari_Resume.pdf
-Disallow: /Sepehr_Jafari_Resume_.pdf
-Disallow: /r/

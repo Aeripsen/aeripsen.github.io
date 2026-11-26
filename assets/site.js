@@ -7,7 +7,6 @@
   var NAV = [
     ["index.html", "index"],
     ["research.html", "research"],
-    ["ids.html", "iot ids"],
     ["flowsentry.html", "flowsentry"],
     ["ledgersentry.html", "ledgersentry"],
     ["imic.html", "imammahdi.ca"],
